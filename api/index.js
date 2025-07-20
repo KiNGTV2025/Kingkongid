@@ -11,7 +11,7 @@ export default async function handler(req, res) {
   const { id } = req.query;
 
   try {
-    const response = await fetch("https://raw.githubusercontent.com/KiNGTV2025/Kingvercel/refs/heads/main/M3UAR%C5%9E%C4%B0V/Kablonet.m3u");
+    const response = await fetch("https://raw.githubusercontent.com/KiNGTV2025/Kingvercel/refs/heads/main/M3U/Kablonet.m3u");
     const text = await response.text();
     const lines = text.split("\n");
 
