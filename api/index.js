@@ -1,5 +1,4 @@
 export default async function handler(req, res) {
- 
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -19,13 +18,13 @@ export default async function handler(req, res) {
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      const match = line.match(/tvg-id="(\d+)"[^,]*,(.*)/);
+      const match = line.match(/tvg-id="([^"]+)"[^,]*,(.*)/);
       if (match) {
         kanalListesi.push({ id: match[1], name: match[2] });
       }
     }
 
-    if (!id || isNaN(id) || !lines.some(l => l.includes(`tvg-id="${id}"`))) {
+    if (!id || !lines.some(l => l.includes(`tvg-id="${id}"`))) {
       const html = `
         <html>
           <head>
@@ -56,7 +55,7 @@ export default async function handler(req, res) {
             </style>
           </head>
           <body>
-            <h1>${id && !isNaN(id) ? "ID bulunamadı!" : "Geçersiz ID"}</h1>
+            <h1>ID bulunamadı!</h1>
             <h2 style="text-align:center;">Mevcut Kanallar</h2>
             <table>
               <thead>
@@ -75,7 +74,7 @@ export default async function handler(req, res) {
 
     for (let i = 0; i < lines.length; i++) {
       if (lines[i].includes(`tvg-id="${id}"`)) {
-        const streamUrl = lines[i + 1];
+        const streamUrl = lines[i + 1]?.trim();
         return res.redirect(streamUrl);
       }
     }
