@@ -10,12 +10,16 @@ export default async function handler(req, res) {
   const { id } = req.query;
 
   try {
+    // ✅ Doğru GitHub RAW URL
     const response = await fetch("https://raw.githubusercontent.com/KiNGTV2025/Kingvercel/main/M3U/Kablonet.m3u");
     const text = await response.text();
-    const lines = text.split("\n");
+
+    // ✅ Trim ile \r gibi gizli karakterleri temizle
+    const lines = text.split("\n").map(line => line.trim());
 
     const kanalListesi = [];
 
+    // ✅ Gelişmiş regex: sayılar + harfler desteklenir
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       const match = line.match(/tvg-id="([^"]+)"[^,]*,(.*)/);
@@ -24,7 +28,9 @@ export default async function handler(req, res) {
       }
     }
 
-    if (!id || !lines.some(l => l.includes(`tvg-id="${id}"`))) {
+    // ✅ ID satırı bulunamadıysa HTML tablo göster
+    const matchingIndex = lines.findIndex(line => line.includes(`tvg-id="${id}"`));
+    if (!id || matchingIndex === -1) {
       const html = `
         <html>
           <head>
@@ -55,7 +61,7 @@ export default async function handler(req, res) {
             </style>
           </head>
           <body>
-            <h1>ID bulunamadı!</h1>
+            <h1>${id ? "ID bulunamadı!" : "Geçersiz ID"}</h1>
             <h2 style="text-align:center;">Mevcut Kanallar</h2>
             <table>
               <thead>
@@ -72,11 +78,12 @@ export default async function handler(req, res) {
       return res.status(200).send(html);
     }
 
-    for (let i = 0; i < lines.length; i++) {
-      if (lines[i].includes(`tvg-id="${id}"`)) {
-        const streamUrl = lines[i + 1]?.trim();
-        return res.redirect(streamUrl);
-      }
+    // ✅ Yayın linkini al ve yönlendir
+    const streamUrl = lines[matchingIndex + 1]?.trim();
+    if (streamUrl) {
+      return res.redirect(streamUrl);
+    } else {
+      return res.status(404).send("Yayın linki bulunamadı.");
     }
 
   } catch (error) {
