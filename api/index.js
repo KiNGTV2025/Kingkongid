@@ -10,16 +10,13 @@ export default async function handler(req, res) {
   const { id } = req.query;
 
   try {
-    // ✅ Doğru GitHub RAW URL
     const response = await fetch("https://raw.githubusercontent.com/KiNGTV2025/Kingvercel/main/M3U/Kablonet.m3u");
     const text = await response.text();
 
-    // ✅ Trim ile \r gibi gizli karakterleri temizle
     const lines = text.split("\n").map(line => line.trim());
 
     const kanalListesi = [];
 
-    // ✅ Gelişmiş regex: sayılar + harfler desteklenir
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       const match = line.match(/tvg-id="([^"]+)"[^,]*,(.*)/);
@@ -28,7 +25,6 @@ export default async function handler(req, res) {
       }
     }
 
-    // ✅ ID satırı bulunamadıysa HTML tablo göster
     const matchingIndex = lines.findIndex(line => line.includes(`tvg-id="${id}"`));
     if (!id || matchingIndex === -1) {
       const html = `
@@ -78,8 +74,15 @@ export default async function handler(req, res) {
       return res.status(200).send(html);
     }
 
-    // ✅ Yayın linkini al ve yönlendir
-    const streamUrl = lines[matchingIndex + 1]?.trim();
+    // ✅ Yayın URL'sini bulma (tek satırlı ve iki satırlı destekli)
+    const currentLine = lines[matchingIndex];
+    const nextLine = lines[matchingIndex + 1]?.trim();
+
+    // Eğer URL tek satırdaysa
+    const inlineUrl = currentLine.match(/(https?:\/\/[^\s]+)/);
+    // Eğer klasik yapıdaysa (URL bir sonraki satırda)
+    const streamUrl = nextLine?.startsWith("http") ? nextLine : (inlineUrl ? inlineUrl[1] : null);
+
     if (streamUrl) {
       return res.redirect(streamUrl);
     } else {
